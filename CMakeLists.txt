@@ -64,6 +64,24 @@ message(STATUS "  Collected ${LIB_NAME} sources: ${LIB_SOURCES}")
 # firmware_link_libraries so it participates in the final firmware link.
 add_library(${LIB_NAME} STATIC ${LIB_SOURCES})
 
+# SDK dependencies belong to the library, not to the application config.
+# Add SDK CMake target names here when this library starts calling their APIs.
+# Example: set(COMPONENT_A_SDK_TARGETS qcm_file socket_adapter)
+set(COMPONENT_A_SDK_TARGETS)
+foreach(sdk_target IN LISTS COMPONENT_A_SDK_TARGETS)
+    if(NOT TARGET ${sdk_target})
+        message(FATAL_ERROR
+            "${LIB_NAME} requires SDK target '${sdk_target}', but it is not enabled or does not exist. "
+            "Enable the corresponding SDK feature in menuconfig."
+        )
+    endif()
+endforeach()
+
+if(COMPONENT_A_SDK_TARGETS)
+    target_link_libraries(${LIB_NAME} PRIVATE ${COMPONENT_A_SDK_TARGETS})
+    message(STATUS "  ${LIB_NAME} SDK dependencies: ${COMPONENT_A_SDK_TARGETS}")
+endif()
+
 # Expose public include directories
 # BUILD_INTERFACE: When building this library
 # INSTALL_INTERFACE: When other targets link to this library
